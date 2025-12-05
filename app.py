@@ -283,7 +283,8 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 
-API_BASE = "http://127.0.0.1:8000"
+#API_BASE = "http://127.0.0.1:8000"
+API_BASE = "https://ofcstreamlitproj.onrender.com"
 st.session_state.api_url = API_BASE.rstrip("/")
 
 # --- Custom CSS for Styling ---
