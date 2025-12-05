@@ -485,7 +485,7 @@ if menu=="🏠 Dashboard":
                 # Filter options for the chart
                 active_filter_chart = st.selectbox(
                     "Filter Courses by Status for Chart:", 
-                    ["All", "Yes", "No"], 
+                    [ "Yes", "No"], 
                     key="dashboard_chart_filter"
                 )
                 
@@ -534,7 +534,7 @@ elif menu=="📚 Course Operations & Charts":
         with col_search:
             search_term = st.text_input("Search Name or Description", key="course_search_term")
         with col_filter:
-            active_filter = st.selectbox("Status Filter", ["All", "Yes", "No"], key="course_active_filter")
+            active_filter = st.selectbox("Status Filter", ["Yes", "No"], key="course_active_filter")
         
         
         params = {}

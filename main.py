@@ -214,8 +214,13 @@ from model import (
 init_db()
 app = FastAPI()
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=[""],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
+
 
 def convert_to_course(row: sqlite3.Row) -> CourseRead:
     return CourseRead(
