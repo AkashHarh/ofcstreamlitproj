@@ -560,7 +560,8 @@ elif menu=="📚 Course Operations & Charts":
     elif operation=="Add":
         cid = st.number_input("Course ID", min_value=1, step=1)
         name = st.text_input("Name")
-        dur = st.text_input("Duration(hr)")
+        dur = st.number_input("Duration (hr)", min_value=1,  format="%d")
+
         desc = st.text_area("Description")
         active = st.selectbox("Active",["Yes","No"])
         if st.button("Add Course"):
@@ -588,7 +589,7 @@ elif menu=="📚 Course Operations & Charts":
         st.warning("⚠️ Full Update (PUT) - All fields will be replaced")
         cid = st.number_input("Course ID to Update", min_value=1, step=1)
         name = st.text_input("New Name")
-        dur = st.text_input("New Duration(hr)")
+        dur = st.number_input("Duration (hr)", min_value=1,  format="%d")
         desc = st.text_area("New Description")
         active = st.selectbox("Active", ["Yes", "No"])
 
@@ -632,7 +633,7 @@ elif menu=="📚 Course Operations & Charts":
                     payload["course_name"] = new_name
             
             if st.checkbox("Update Duration"):
-                new_dur = st.text_input("New Duration(hr)")
+                new_dur = st.number_input("Duration (hr)", min_value=1,  format="%d")
                 if new_dur:
                     payload["duration"] = new_dur
         
@@ -721,6 +722,7 @@ elif menu=="📚 Course Operations & Charts":
                 ax.set_title('Courses Added Over Time', fontsize=16)
                 ax.set_xlabel('Date', fontsize=12)
                 ax.set_ylabel('New Courses', fontsize=12)
+                ax.tick_params(axis='x', rotation=45)
                 ax.grid(True, linestyle='--', alpha=0.7)
                 st.pyplot(fig)
 
@@ -804,28 +806,68 @@ elif menu=="📋 Enrollment & Charts":
                 st.info("No enrollment data available for charts.")
 
 
+# elif menu == "🔍 Student Search":
+#     st.header("🔍 Student Enrollment History")
+#     student_name_search = st.text_input("Enter Student Name to Search")
+    
+#     if st.button("Search Enrollments"):
+#         if student_name_search:
+#             search_url = f"{st.session_state.api_url}/students/{student_name_search}/enrollments"
+#             resp = requests.get(search_url)
+            
+#             if resp and resp.status_code == 200:
+#                 data = resp.json()
+#                 df = pd.DataFrame(data)
+                
+#                 st.subheader(f"Results for: **{student_name_search}**")
+                
+#                 display_df = df[['enrollment_id', 'course_id', 'enrolled_at']].copy()
+#                 st.dataframe(display_df.sort_values("enrolled_at", ascending=False))
+                
+#                 st.success(f"Found {len(df)} enrollments for {student_name_search}")
+#             elif resp:
+#                 st.subheader("Search Failed")
+#                 handle_api_response(resp, "", error_message_key="detail")
+#             show_response(resp)
+#         else:
+#             st.warning("Please enter a student name.")
 elif menu == "🔍 Student Search":
     st.header("🔍 Student Enrollment History")
     student_name_search = st.text_input("Enter Student Name to Search")
-    
+
     if st.button("Search Enrollments"):
         if student_name_search:
             search_url = f"{st.session_state.api_url}/students/{student_name_search}/enrollments"
             resp = requests.get(search_url)
-            
-            if resp and resp.status_code == 200:
+
+            # 🔴 Student NOT FOUND → backend returns 404
+            if resp.status_code == 404:
+                st.error(resp.json().get("detail", "Student not found"))
+                show_response(resp)
+                st.stop()
+
+            # 🟡 Student exists but ZERO enrollments → backend returns 204
+            if resp.status_code == 204:
+                st.warning(resp.json().get("detail", "No enrollments found"))
+                show_response(resp)
+                st.stop()
+
+            # 🟢 Student exists WITH enrollments → 200 OK
+            if resp.status_code == 200:
                 data = resp.json()
                 df = pd.DataFrame(data)
-                
+
                 st.subheader(f"Results for: **{student_name_search}**")
-                
+
                 display_df = df[['enrollment_id', 'course_id', 'enrolled_at']].copy()
                 st.dataframe(display_df.sort_values("enrolled_at", ascending=False))
-                
+
                 st.success(f"Found {len(df)} enrollments for {student_name_search}")
-            elif resp:
-                st.subheader("Search Failed")
-                handle_api_response(resp, "", error_message_key="detail")
+                show_response(resp)
+                st.stop()
+
+            # ❗ Any other unexpected response
+            st.error(f"Unexpected error ({resp.status_code})")
             show_response(resp)
         else:
             st.warning("Please enter a student name.")

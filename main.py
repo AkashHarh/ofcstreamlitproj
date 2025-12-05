@@ -462,20 +462,34 @@ def remove_enrollment(enroll_id: int):
 
 @app.get("/students/{student_name}/enrollments", response_model=List[EnrollmentRead])
 def get_student_enrollments(student_name: str):
-    #Retrieves all enrollments for a specific student
     conn = get_connection()
     cur = conn.cursor()
     
     try:
+        # 1️⃣ Check if student exists
+        cur.execute("SELECT * FROM students WHERE student_name=?", (student_name,))
+        student = cur.fetchone()
+        if not student:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Student '{student_name}' not found."
+            )
+
+        # 2️⃣ Fetch enrollments for the existing student
         cur.execute(
-            "SELECT * FROM enrollments WHERE student_name=? ORDER BY enrolled_at DESC", 
+            "SELECT * FROM enrollments WHERE student_name=? ORDER BY enrolled_at DESC",
             (student_name,)
         )
         rows = cur.fetchall()
+        
     finally:
         conn.close()
-        
+    
+    # 3️⃣ Student exists but no enrollments
     if not rows:
-        raise HTTPException(status_code=404, detail=f"Student '{student_name}' has no active enrollments.")
-        
+        raise HTTPException(
+            status_code=204,
+            detail=f"No enrollments found for '{student_name}'."
+        )
+    
     return [convert_to_enrollment(row) for row in rows]
